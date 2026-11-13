@@ -1,0 +1,94 @@
+
+org 100h                 ; Menentukan awal program di offset 100h (format COM)
+
+.data
+    pesanInput db "Masukan nilai N (1-9) : $"   ; Menyimpan teks untuk ditampilkan
+    n db 0                                      ; Variabel untuk menyimpan nilai N
+    baris db 1                                  ; Variabel penghitung baris
+    kolom db 1                                  ; Variabel penghitung kolom
+
+.code
+    mov ax, @data        ; Mengambil alamat segmen data ke AX
+    mov ds, ax           ; Memasukkan alamat data ke DS
+
+    main proc            ; Awal prosedur main
+
+        ; ===== INPUT =====
+
+        mov dx, offset pesanInput ; Mengambil alamat pesanInput ke DX
+        mov ah, 09h               ; Memilih fungsi DOS untuk output string
+        int 21h                   ; Menjalankan fungsi DOS
+
+        handleInput:
+            mov ax, 0             ; Mengosongkan AX
+            int 16h               ; Membaca tombol keyboard
+                                  ; AL berisi karakter yang ditekan
+
+            cmp al, 0dh           ; Apakah tombol yang ditekan Enter?
+            je inputFinish        ; Jika iya, lompat ke inputFinish
+
+            mov dl, al            ; Memindahkan karakter ke DL
+            mov ah, 02h           ; Memilih fungsi output karakter
+            int 21h               ; Menampilkan karakter yang diketik
+
+            sub al, 30h           ; Mengubah ASCII menjadi angka
+            mov n, al             ; Menyimpan angka ke variabel n
+
+            jmp handleInput       ; Kembali membaca tombol keyboard
+
+        inputFinish:
+
+            ; ===== PINDAH BARIS =====
+
+            mov ah, 02h           ; Fungsi output karakter
+            mov dl, 0dh           ; Kode Carriage Return (Cursor balik ke awal)
+            int 21h               ; Menjalankan output
+
+            mov dl, 0ah           ; Kode Line Feed (New Line)
+            int 21h               ; Pindah ke baris berikutnya
+
+            ; ===== PERULANGAN BARIS =====
+
+            mov baris, 1          ; Memulai baris dari angka 1
+            mov cx, 0             ; Mengosongkan CX
+            mov cl, n             ; Memasukkan nilai N ke CL
+
+        ulangBaris:
+            push cx               ; Menyimpan penghitung baris ke stack
+
+            ; ===== PERULANGAN KOLOM =====
+
+            mov cx, 0             ; Mengosongkan CX
+            mov cl, baris         ; Jumlah kolom sesuai nomor baris
+            mov kolom, 1          ; Kolom dimulai dari angka 1
+
+        ulangKolom:
+            mov dl, kolom         ; Memindahkan nilai kolom ke DL
+            add dl, 30h           ; Mengubah angka menjadi karakter ASCII
+            mov ah, 02h           ; Fungsi output karakter
+            int 21h               ; Menampilkan angka
+
+            mov dl, 20h           ; Memasukkan karakter spasi
+            mov ah, 02h           ; Fungsi output karakter
+            int 21h               ; Menampilkan spasi
+
+            inc kolom             ; Menambah nilai kolom sebanyak 1
+            loop ulangKolom       ; Mengurangi CX dan mengulang jika belum 0
+
+            ; ===== PINDAH BARIS =====
+
+            mov ah, 02h           ; Fungsi output karakter
+            mov dl, 0dh           ; Carriage Return
+            int 21h               ; Menjalankan output
+
+            mov dl, 0ah           ; Line Feed
+            int 21h               ; Pindah ke baris berikutnya
+
+            inc baris             ; Menambah nomor baris sebanyak 1
+
+            pop cx                ; Mengambil kembali CX dari stack
+            loop ulangBaris       ; Mengulang baris jika CX belum 0
+
+        ret                       ; Kembali dari prosedur
+
+    main endp                     ; Akhir prosedur main
