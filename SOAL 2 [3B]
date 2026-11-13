@@ -1,0 +1,200 @@
+
+org 100h
+
+.data
+    pesanInput db "Masukan nilai N: $"
+    n db 0
+    baris db 1
+    kolom db 1
+    tengah db 0
+    jumlahAngka db 0
+    spasi db 0
+
+.code
+    mov ax, @data
+    mov ds, ax
+
+    main proc
+
+        ; ===== INPUT =====
+
+        mov dx, offset pesanInput
+        mov ah, 09h
+        int 21h
+
+        handleInput:
+            mov ax, 0
+            int 16h
+
+            cmp al, 0dh
+            je inputFinish
+
+            cmp n, 0
+            jne handleInput
+
+            cmp al, '1'
+            jb handleInput
+
+            cmp al, '9'
+            ja handleInput
+
+            mov dl, al
+            mov ah, 02h
+            int 21h
+
+            sub al, '0'
+            mov n, al
+
+            jmp handleInput
+
+        inputFinish:
+
+            ; ===== PINDAH BARIS =====
+
+            mov ah, 02h
+            mov dl, 0dh
+            int 21h
+            mov dl, 0ah
+            int 21h
+
+            ; ===== MENENTUKAN TENGAH =====
+
+            mov al, n
+            inc al
+            shr al, 1
+            mov tengah, al
+
+            ; ===== PERULANGAN BAGIAN ATAS =====
+
+            mov baris, 1
+
+        ulangAtas:
+            mov al, baris
+            cmp al, tengah
+            ja bagianBawah
+
+            ; Menghitung jumlah angka
+            mov al, baris
+            shl al, 1
+            dec al
+            mov jumlahAngka, al
+
+            ; Menghitung jumlah spasi
+            mov al, n
+            sub al, jumlahAngka
+            shr al, 1
+            mov bl, 3
+            mul bl
+            mov spasi, al
+
+            ; Mencetak spasi
+            mov cx, 0
+            mov cl, spasi
+
+            ulangSpasi:
+                cmp cx, 0
+                je cetakAngka
+                mov dl, 32
+                mov ah, 02h
+                int 21h
+                loop ulangSpasi
+
+            ; Mencetak angka
+            cetakAngka:
+                mov cx, 0
+                mov cl, jumlahAngka
+                mov kolom, 1
+
+            ulangKolom:
+                mov dl, kolom
+                add dl, '0'
+                mov ah, 02h
+                int 21h
+
+                mov dl, 32
+                mov ah, 02h
+                int 21h
+
+                inc kolom
+                loop ulangKolom
+
+            ; Pindah baris
+            mov ah, 02h
+            mov dl, 0dh
+            int 21h
+            mov dl, 0ah
+            int 21h
+
+            inc baris
+            jmp ulangAtas
+
+            ; ===== PERULANGAN BAGIAN BAWAH =====
+
+        bagianBawah:
+            mov al, tengah
+            dec al
+            mov baris, al
+
+        ulangBawah:
+            cmp baris, 0
+            je selesai
+
+            ; Menghitung jumlah angka
+            mov al, baris
+            shl al, 1
+            dec al
+            mov jumlahAngka, al
+
+            ; Menghitung jumlah spasi
+            mov al, n
+            sub al, jumlahAngka
+            shr al, 1
+            mov bl, 3
+            mul bl
+            mov spasi, al
+
+            ; Mencetak spasi
+            mov cx, 0
+            mov cl, spasi
+
+            ulangSpasiBawah:
+                cmp cx, 0
+                je cetakAngkaBawah
+                mov dl, 32
+                mov ah, 02h
+                int 21h
+                loop ulangSpasiBawah
+
+            ; Mencetak angka
+            cetakAngkaBawah:
+                mov cx, 0
+                mov cl, jumlahAngka
+                mov kolom, 1
+
+            ulangKolomBawah:
+                mov dl, kolom
+                add dl, '0'
+                mov ah, 02h
+                int 21h
+
+                mov dl, 32
+                mov ah, 02h
+                int 21h
+
+                inc kolom
+                loop ulangKolomBawah
+
+            ; Pindah baris
+            mov ah, 02h
+            mov dl, 0dh
+            int 21h
+            mov dl, 0ah
+            int 21h
+
+            dec baris
+            jmp ulangBawah
+
+        selesai:
+            ret
+
+    main endp
