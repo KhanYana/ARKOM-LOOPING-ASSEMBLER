@@ -3,7 +3,7 @@ org 100h                 ; Menentukan awal program di offset 100h (format COM)
 
 .data
     pesanInput db "Masukan nilai N (1-9) : $"   ; Menyimpan teks untuk ditampilkan
-    n db 0                                      ; Variabel untuk menyimpan nilai N
+    ;n db 0                                      ; Variabel untuk menyimpan nilai N
     baris db 1                                  ; Variabel penghitung baris
     kolom db 1                                  ; Variabel penghitung kolom
 
@@ -32,7 +32,7 @@ org 100h                 ; Menentukan awal program di offset 100h (format COM)
             int 21h               ; Menampilkan karakter yang diketik
 
             sub al, 30h           ; Mengubah ASCII menjadi angka
-            mov n, al             ; Menyimpan angka ke variabel n
+            mov bl, al             ; Menyimpan angka ke variabel BL
 
             jmp handleInput       ; Kembali membaca tombol keyboard
 
@@ -49,10 +49,11 @@ org 100h                 ; Menentukan awal program di offset 100h (format COM)
 
             ; ===== PERULANGAN BARIS =====
 
-            mov baris, 1          ; Memulai baris dari angka 1
+            
             mov cx, 0             ; Mengosongkan CX
-            mov cl, n             ; Memasukkan nilai N ke CL
-
+            mov cl, bl            ; Memasukkan nilai BL ke CL
+            mov baris, 1          ; Memulai baris dari angka 1
+            
         ulangBaris:
             push cx               ; Menyimpan penghitung baris ke stack
 
