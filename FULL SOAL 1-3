@@ -1,112 +1,131 @@
 org 100h                    ; format COM, program mulai di alamat 100h
 
 .data
-    pesan db "Masukan nilai N (1-9): $"   ; satu-satunya variabel (teks prompt)
+    pesan db "Masukan nilai N (1-9): $"   ; teks prompt
+    judul1 db "Pola 1: Segitiga Siku-siku$"   ; keterangan pola 1
+    judul2 db "Pola 2: Belah Ketupat$"        ; keterangan pola 2
+    judul3 db "Pola 3: Segitiga Sama Sisi$"   ; keterangan pola 3
 
 .code
     mov ax, @data           ; ambil alamat segmen data
     mov ds, ax              ; isi DS supaya string bisa dibaca
+    
+main proc
+    
+        mov dx, offset pesan    ; DX = alamat teks prompt
+        mov ah, 09h             ; fungsi cetak string
+        int 21h                 ; tampilkan prompt
+    
+        mov ah, 01h             ; fungsi baca 1 karakter (echo)
+        int 21h                 ; hasil di AL (kode ASCII)
+        sub al, 30h             ; ASCII -> angka asli
+        mov bl, al              ; BL = N (tidak diubah lagi)
+        call baris_baru         ; pindah baris
+        call baris_baru         ; baris kosong sebelum pola 1
+    
+        ; ===== POLA 1: segitiga siku-siku =====
+        mov dx, offset judul1   ; DX = alamat judul pola 1
+        mov ah, 09h             ; fungsi cetak string
+        int 21h                 ; tampilkan judul
+        call baris_baru         ; new line setelah judul
+        mov bh, 1               ; BH = banyak angka di baris ini, mulai 1
+    p1:
+        cmp bh, bl              ; bandingkan BH dengan N
+        jg p1_selesai           ; jika BH > N, pola 1 selesai
+        mov di, 0               ; DI = jumlah spasi depan = 0
+        call cetak              ; cetak 1 baris berisi 1..BH
+        inc bh                  ; baris berikutnya
+        jmp p1                  ; ulangi
+    p1_selesai:
+        call baris_baru         ; baris kosong pemisah antar pola
+    
+        ; ===== POLA 2: belah ketupat =====
+        mov dx, offset judul2   ; DX = alamat judul pola 2
+        mov ah, 09h             ; fungsi cetak string
+        int 21h                 ; tampilkan judul
+        call baris_baru         ; new line setelah judul
+        call naik               ; cetak bagian piramida naik
+        sub bh, 4               ; mundur ke baris di bawah puncak
+    p2:
+        cmp bh, 1               ; masih >= 1 ?
+        jl p2_selesai           ; jika BH < 1, selesai
+        call cetakp             ; hitung spasi otomatis, lalu cetak
+        sub bh, 2               ; turun: angka berkurang 2
+        jmp p2                  ; ulangi
+    p2_selesai:
+        call baris_baru         ; baris kosong pemisah
+    
+        ; ===== POLA 3: segitiga sama sisi =====
+        mov dx, offset judul3   ; DX = alamat judul pola 3
+        mov ah, 09h             ; fungsi cetak string
+        int 21h                 ; tampilkan judul
+        call baris_baru         ; new line setelah judul
+        call naik               ; cukup bagian naik saja
+        ret                     ; akhir program utama
+    
+    
+    ; ---------- PROSEDUR: piramida naik (1,3,5,... <= N) ----------
+    naik:
+        mov bh, 1               ; mulai dari 1 angka
+    n1:
+        cmp bh, bl              ; BH > N ?
+        jg n2                   ; ya -> berhenti
+        call cetakp             ; cetak baris dengan spasi otomatis
+        add bh, 2               ; tambah 2 angka tiap baris
+        jmp n1                  ; ulangi
+    n2:
+        ret
+    
+    
+    ; ---------- PROSEDUR: hitung spasi depan = N - BH, lalu cetak ----------
+    cetakp:
+        mov al, bl              ; AL = N
+        sub al, bh              ; AL = N - BH
+        mov ah, 0               ; kosongkan AH
+        mov di, ax              ; DI = jumlah spasi depan
+                                ; (tanpa ret: lanjut langsung ke cetak)
+    
+    ; ---------- PROSEDUR: cetak 1 baris ----------
+    cetak:
+        push cx                 ; simpan CX dan DX
+        push dx
+        mov cx, di              ; CX = jumlah spasi
+        jcxz angka              ; jika 0, lewati cetak spasi
+    spasi:
+        mov dl, 20h             ; karakter spasi
+        mov ah, 02h             ; fungsi cetak 1 karakter
+        int 21h                 ; cetak spasi
+        loop spasi              ; ulangi sampai CX = 0
+    angka:
+        mov cl, bh              ; CL = banyak angka
+        mov ch, 0               ; CX = BH
+        mov dh, 1               ; DH = angka mulai 1
+    isi:
+        mov dl, dh              ; DL = angka sekarang
+        add dl, 30h             ; angka -> ASCII
+        mov ah, 02h
+        int 21h                 ; cetak angka
+        mov dl, 20h             ; spasi setelah angka
+        int 21h                 ; cetak spasi
+        inc dh                  ; angka berikutnya
+        loop isi                ; ulangi BH kali
+        call baris_baru         ; akhiri baris
+        pop dx                  ; kembalikan DX
+        pop cx                  ; kembalikan CX
+        ret
+    
+    
+    ; ---------- PROSEDUR: pindah baris ----------
+    baris_baru:
+        push ax
+        push dx
+        mov ah, 02h
+        mov dl, 0dh             ; Carriage Return
+        int 21h
+        mov dl, 0ah             ; Line Feed
+        int 21h
+        pop ax
+        pop dx
+        ret
 
-    mov dx, offset pesan    ; DX = alamat teks prompt
-    mov ah, 09h             ; fungsi cetak string
-    int 21h                 ; tampilkan prompt
-
-    mov ah, 01h             ; fungsi baca 1 karakter (langsung tampil/echo)
-    int 21h                 ; hasil di AL (kode ASCII)
-    sub al, 30h             ; ASCII -> angka asli ('5' -> 5)
-    mov bl, al              ; BL = N (disimpan, tidak diubah lagi)
-    call baris_baru         ; pindah baris
-
-    ; ===== POLA 1: segitiga siku-siku =====
-    mov bh, 1               ; BH = banyak angka di baris ini, mulai 1
-p1:
-    cmp bh, bl              ; bandingkan BH dengan N
-    jg p1_selesai           ; jika BH > N, pola 1 selesai
-    mov di, 0               ; DI = jumlah spasi di depan = 0 (rata kiri)
-    call cetak              ; cetak 1 baris berisi 1..BH
-    inc bh                  ; baris berikutnya: angka bertambah 1
-    jmp p1                  ; ulangi
-p1_selesai:
-    call baris_baru         ; baris kosong pemisah antar pola
-
-    ; ===== POLA 2: belah ketupat (naik lalu turun) =====
-    call naik               ; cetak bagian piramida naik (1,3,5,...)
-    sub bh, 4               ; BH sekarang melewati N, mundur 4 -> baris di bawah puncak
-p2:
-    cmp bh, 1               ; masih >= 1 ?
-    jl p2_selesai           ; jika BH < 1, selesai
-    call cetakp             ; hitung spasi otomatis, lalu cetak baris
-    sub bh, 2               ; turun: angka berkurang 2
-    jmp p2                  ; ulangi
-p2_selesai:
-    call baris_baru         ; baris kosong pemisah
-
-    ; ===== POLA 3: piramida (segitiga sama sisi) =====
-    call naik               ; cukup bagian naik saja
-    ret                     ; akhir program utama
-
-
-; ---------- PROSEDUR: piramida naik (1,3,5,... <= N) ----------
-naik:
-    mov bh, 1               ; mulai dari 1 angka
-n1:
-    cmp bh, bl              ; BH > N ?
-    jg n2                   ; ya -> berhenti
-    call cetakp             ; cetak baris dengan spasi otomatis
-    add bh, 2               ; piramida: tambah 2 angka tiap baris
-    jmp n1                  ; ulangi
-n2:
-    ret                     ; kembali (BH tersisa = bilangan ganjil pertama > N)
-
-
-; ---------- PROSEDUR: hitung spasi depan = N - BH, lalu cetak ----------
-cetakp:
-    mov al, bl              ; AL = N
-    sub al, bh              ; AL = N - BH
-    mov ah, 0               ; kosongkan AH supaya AX = N - BH
-    mov di, ax              ; DI = jumlah spasi depan
-                            ; (tanpa ret: lanjut langsung ke cetak di bawah)
-
-; ---------- PROSEDUR: cetak 1 baris ----------
-; Input: DI = jumlah spasi depan, BH = banyak angka
-cetak:
-    push cx                 ; simpan CX dan DX milik pemanggil
-    push dx
-    mov cx, di              ; CX = jumlah spasi yang harus dicetak
-    jcxz angka              ; jika 0, lewati cetak spasi
-spasi:
-    mov dl, 20h             ; 20h = karakter spasi
-    mov ah, 02h             ; fungsi cetak 1 karakter
-    int 21h                 ; cetak spasi
-    loop spasi              ; CX-1, ulangi sampai CX = 0
-angka:
-    mov cl, bh              ; CL = banyak angka yang dicetak
-    mov ch, 0               ; CX = BH
-    mov dh, 1               ; DH = angka yang akan dicetak, mulai 1
-isi:
-    mov dl, dh              ; DL = angka sekarang
-    add dl, 30h             ; angka -> ASCII
-    mov ah, 02h
-    int 21h                 ; cetak angka
-    mov dl, 20h             ; spasi setelah angka
-    int 21h                 ; cetak spasi
-    inc dh                  ; angka berikutnya
-    loop isi                ; ulangi BH kali
-    call baris_baru         ; akhiri baris
-    pop dx                  ; kembalikan DX (urutan kebalikan dari push)
-    pop cx                  ; kembalikan CX
-    ret
-
-
-; ---------- PROSEDUR: pindah baris ----------
-baris_baru:
-    push ax
-    push dx
-    mov ah, 02h
-    mov dl, 0dh             ; Carriage Return (kursor ke kiri)
-    int 21h
-    mov dl, 0ah             ; Line Feed (turun satu baris)
-    int 21h
-    pop dx
-    pop ax
-    ret
+main endp
