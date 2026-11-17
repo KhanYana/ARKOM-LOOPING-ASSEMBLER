@@ -1,0 +1,67 @@
+org 100h
+
+.DATA
+ yourName db "Insert Your Name: $"
+ greetings db "Hi there 8D, $"
+ nama db 50 dup('$')
+ ;angka db 5 dup(1)
+ 
+.CODE
+    mov ax, @data
+    mov ds, ax
+    
+    mov dx, offset yourName
+    mov ah, 09h
+    int 21h
+    
+    ;mov si, 0        ; kosongin si nya
+    handleInput:
+    mov ax, 00h       ; 00h in ascii codes is null
+    int 16h
+    
+    mov dl, al
+    mov ah, 02h
+    int 21h
+    
+    cmp al, 0dh
+    je selesai
+    
+    mov nama[si], al ; hasil inputan kan masuknya al, nah dari al disimpan di si
+    inc si 
+    
+    jmp handleInput
+    
+    selesai:
+    ;input udh selesai dan mau print tulisan dan nama kita yang tadi di innput
+    
+    ;mov nama[si], '$'  ; i still dont what this is
+    ; atas ini kepake klo di .DATA pakainya "nama db ?"
+    
+    call newLine
+    
+    mov dx, offset greetings
+    mov ah, 09h
+    int 21h
+    
+    mov dx, offset nama
+    mov ah, 09h
+    int 21h
+    
+    
+    newLine:
+    push ax
+    push dx
+    
+    mov ah, 02h
+    mov dl, 0ah
+    int 21h
+    
+    mov dl, 0dh
+    int 21h
+    
+    pop ax
+    pop dx
+    
+    ret
+        
+ret 
