@@ -1,0 +1,70 @@
+
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
+
+org 100h
+
+.DATA
+    angka1 db ?
+    angka2 db 2
+    hasil db ?
+    
+    msg db "Hasil Penjumlahan: $"
+    inputAngka db "masukin angka: $"
+    
+    
+.CODE
+    mov ax, @data
+    mov ds, ax
+    
+    mov dx, offset inputAngka
+    mov ah, 09h
+    int 21h
+    
+    mov ah, 01h
+    int 21h
+    
+    mov [angka1], al
+    
+    ;sub dl, 30h
+    
+    mov al, [angka1]
+    
+    add al, 30h
+    
+    add al, [angka2]
+    mov [hasil], al
+    
+    call newLine
+    
+    mov dx, offset msg
+    mov ah, 09h
+    int 21h
+    
+    mov dl, [hasil]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+    
+    newLine:
+    push ax
+    push dx
+    
+    mov ah, 02h
+    mov dl, 0dh
+    int 21h
+    
+    mov dl, 0ah
+    int 21h
+    
+    pop dx
+    pop ax
+    
+    ret
+        
+
+ret
+
+
+
+
