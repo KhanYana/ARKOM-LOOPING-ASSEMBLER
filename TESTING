@@ -9,7 +9,7 @@ org 100h
     angka2 db 2
     hasil db ?
     
-    msg db "Hasil Penjumlahan: $"
+    msg db "Hasil Penjumlahan +2: $"
     inputAngka db "masukin angka: $"
     
     
@@ -25,12 +25,9 @@ org 100h
     int 21h
     
     mov [angka1], al
-    
-    ;sub dl, 30h
-    
     mov al, [angka1]
     
-    add al, 30h
+    sub al, 30h         ; ascii ke angka
     
     add al, [angka2]
     mov [hasil], al
@@ -42,29 +39,24 @@ org 100h
     int 21h
     
     mov dl, [hasil]
-    add dl, 30h
+    add dl, 30h         ; angka ke ascii
     mov ah, 02h
     int 21h
     
     newLine:
-    push ax
-    push dx
-    
-    mov ah, 02h
-    mov dl, 0dh
-    int 21h
-    
-    mov dl, 0ah
-    int 21h
-    
-    pop dx
-    pop ax
-    
-    ret
+        push ax
+        push dx
         
-
+        mov ah, 02h
+        mov dl, 0dh
+        int 21h
+        
+        mov dl, 0ah
+        int 21h
+        
+        pop dx
+        pop ax
+        
+        ret
+        
 ret
-
-
-
-
